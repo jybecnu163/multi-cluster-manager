@@ -1,0 +1,2 @@
+import { useAuthStore } from '../store/useAuthStore'
+export const useAuth = () => { const { user, token, setToken, setUser, logout } = useAuthStore(); return { user, token, login: (token: string, user: any) => { setToken(token); setUser(user) }, logout } }

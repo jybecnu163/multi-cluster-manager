@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: multi-cluster-manager
+  datasource:
+    url: jdbc:postgresql://localhost:5432/manager_db
+    username: manager_user
+    password: placeholder
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: placeholder
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+  security:
+    user:
+      name: admin
+      password: placeholder
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.cloudplatform.manager: DEBUG
+
+app:
+  jwt:
+    secret: placeholder-jwt-secret-key
+    expiration-ms: 28800000
+  totp:
+    issuer: MultiClusterManager
