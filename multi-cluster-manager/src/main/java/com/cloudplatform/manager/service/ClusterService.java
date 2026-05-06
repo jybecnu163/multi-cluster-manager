@@ -1,5 +1,13 @@
 package com.cloudplatform.manager.service;
 
+import com.cloudplatform.manager.dto.ClusterRequest;
+import com.cloudplatform.manager.dto.ClusterResponse;
+import java.util.List;
+
 public interface ClusterService {
-    // 占位接口，后续实现
+    List<ClusterResponse> listClusters();
+    ClusterResponse registerCluster(ClusterRequest request);
+    void deleteCluster(Long id);
+    boolean testHealth(Long id);
+    void checkAndUpdateClusterHealth();  // 定时调用
 }

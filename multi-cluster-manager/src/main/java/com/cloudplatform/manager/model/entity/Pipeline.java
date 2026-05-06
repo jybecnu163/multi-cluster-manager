@@ -1,41 +1,22 @@
 package com.cloudplatform.manager.model.entity;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
 
 import java.time.Instant;
-import java.util.UUID;
 
-@Entity
-@Table(name = "pipelines")
-@Getter
-@Setter
+@Data
+@TableName("pipelines")
 public class Pipeline {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(nullable = false, length = 128)
+    @TableId(type = IdType.AUTO)
+    private Long id;
     private String name;
-
-    @Column(nullable = false, columnDefinition = "JSONB")
-    @JdbcTypeCode(SqlTypes.JSON)
-    private String steps;
-
-    @Column(name = "trigger_type", length = 20)
-    private String triggerType;
-
-    @Column(name = "approval_timeout_hours")
-    private Integer approvalTimeoutHours = 24;
-
-    @Column(name = "created_by")
-    private UUID createdBy;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    private String steps; // JSON 存储步骤数组
+    private String triggerType; // api, webhook, manual
+    private Integer approvalTimeoutHours;
+    private Long createdBy;
     private Instant createdAt;
+    private String webhookSecret;  // 用于签名验证
 }

@@ -1,5 +1,11 @@
 package com.cloudplatform.manager.service;
 
+import org.springframework.scheduling.annotation.Async;
+
+import java.util.Map;
+
 public interface AuditService {
-    // 占位接口，后续实现
+
+    @Async
+    void log(String operation, String targetType, Long targetId, Map<String, Object> details);
 }

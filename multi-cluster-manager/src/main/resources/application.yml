@@ -1,56 +1,64 @@
 spring:
-  application:
-    name: multi-cluster-manager
   datasource:
-    url: jdbc:postgresql://localhost:5432/manager_db
-    username: manager_user
-    password: placeholder
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/manager_db}
+    username: ${POSTGRES_USER:root}
+    password: ${POSTGRES_PASSWORD:pass}
     driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        jdbc:
-          lob:
-            non_contextual_creation: true
   data:
     redis:
-      host: localhost
-      port: 6379
-      password: placeholder
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-  security:
-    user:
-      name: admin
-      password: placeholder
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+#      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  jackson:
+    property-naming-strategy: SNAKE_CASE   # 全局下划线命名
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.cloudplatform.manager.model.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: ASSIGN_UUID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      
+app:
+  jwt:
+    secret: ${JWT_SECRET:KlK4JZccLkJoAtXbB11IyFm0izW+/aU2PYhweY+V8zQ=}
+    expiration-ms: 28800000  # 8 hours
+  totp:
+    issuer: MultiClusterManager
+  encryption:
+    # 需生成 Base64 编码的 AES-256 密钥
+    secret-key: ${ENCRYPTION_SECRET_KEY:+olDj1+qKRn4UH31HXZHaG7TEWI83MNr2kMXLv0QsXM=}
+k8s:
+  client:
+    connection-timeout-ms: 30000
 
 server:
   port: 8080
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,prometheus,metrics
-  metrics:
-    export:
-      prometheus:
-        enabled: true
+  error:
+    include-message: always
+  compression:
+    enabled: true
 
 logging:
   level:
-    com.cloudplatform.manager: DEBUG
+    com.cloudplatform.manager: INFO
+  pattern:
+    console: "%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"
 
-app:
-  jwt:
-    secret: placeholder-jwt-secret-key
-    expiration-ms: 28800000
-  totp:
-    issuer: MultiClusterManager
+

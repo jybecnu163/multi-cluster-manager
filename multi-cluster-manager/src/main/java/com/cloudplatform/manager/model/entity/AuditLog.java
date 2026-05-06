@@ -1,51 +1,27 @@
 package com.cloudplatform.manager.model.entity;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import lombok.Data;
 
 import java.net.InetAddress;
-import java.time.Instant;
-import java.util.UUID;
+import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "audit_logs")
-@Getter
-@Setter
+@Data
+@TableName("audit_logs")
 public class AuditLog {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(type = IdType.AUTO)
     private Long id;
-
-    @Column(name = "user_id")
-    private UUID userId;
-
-    @Column(nullable = false)
+    private Long userId;
     private String operation;
-
-    @Column(name = "target_type", length = 64)
     private String targetType;
-
-    @Column(name = "target_id")
-    private UUID targetId;
-
-    @Column(name = "request_ip")
+    private Long targetId;
     private InetAddress requestIp;
-
-    @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
-
-    @Column(columnDefinition = "JSONB")
-    @JdbcTypeCode(SqlTypes.JSON)
     private String details;
-
-    @Column(name = "prev_hash", length = 64)
     private String prevHash;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    private LocalDateTime createdAt;
 }

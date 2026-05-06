@@ -12,7 +12,7 @@ public class RedissonConfig {
     @Bean
     public RedissonClient redissonClient() {
         Config config = new Config();
-        config.useSingleServer().setAddress("redis://localhost:6379").setPassword("placeholder");
+        config.useSingleServer().setAddress("redis://localhost:6379");//.setPassword("placeholder");
         return Redisson.create(config);
     }
 }

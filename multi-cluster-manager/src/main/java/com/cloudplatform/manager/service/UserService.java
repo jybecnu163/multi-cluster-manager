@@ -1,5 +1,13 @@
 package com.cloudplatform.manager.service;
 
+import com.cloudplatform.manager.model.entity.User;
+
+import java.util.List;
+
 public interface UserService {
-    // 占位接口，后续实现
+    List<User> listUsers(Long departmentId);
+
+    User createUser(String name, String email, String password, List<Long> departmentIds, Long primaryDepartmentId);
+
+    void assignDepartments(Long userId, List<Long> departmentIds, Long primaryDepartmentId);
 }

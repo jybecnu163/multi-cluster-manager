@@ -1,23 +1,17 @@
 package com.cloudplatform.manager.model.entity;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+import java.time.Instant;
 import java.util.UUID;
 
-@Entity
-@Table(name = "department_settings")
-@Getter
-@Setter
+@Data
+@TableName("department_settings")
 public class DepartmentSettings {
-    @Id
-    @Column(name = "department_id")
-    private UUID departmentId;
+    @TableId
+    private Long departmentId;
+    private Boolean allowOpsBypassProdScale;
+    private Instant updatedAt;
 
-    @Column(name = "allow_ops_bypass_prod_scale", nullable = false)
-    private Boolean allowOpsBypassProdScale = false;
-
-    @Column(name = "updated_at")
-    private java.time.Instant updatedAt;
-}
+   }

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cloudplatform.manager.mapper.DeploymentTaskMapper">
+    <!-- 查询处于 internal_test 状态且策略中 auto_approve_traffic 为 false 的任务 -->
+    <select id="findInternalTestTasksWithoutAutoApprove" resultType="com.cloudplatform.manager.model.entity.DeploymentTask">
+        SELECT * FROM deployment_tasks
+        WHERE status = 'internal_test'
+          AND strategy_json->>'auto_approve_traffic' = 'false'
+    </select>
+    
+    <!-- 分页查询根据 JSONB 字段过滤 -->
+    <select id="selectByStrategyJsonCondition" resultType="com.cloudplatform.manager.model.entity.DeploymentTask">
+        SELECT * FROM deployment_tasks
+        <where>
+            <if test="batchSizeType != null">
+                strategy_json->>'batch_size_type' = #{batchSizeType}
+            </if>
+        </where>
+    </select>
+</mapper>

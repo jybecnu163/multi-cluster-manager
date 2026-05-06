@@ -4,16 +4,27 @@ multi-cluster-manager-frontend\dist-ssr
 multi-cluster-manager-frontend\*.local
 multi-cluster-manager-frontend\.DS_Store
 multi-cluster-manager-frontend\package-lock.json
+multi-cluster-manager-frontend/package-lock.json
 
-multi-cluster-manager-frontend\README-front.MD
+multi-cluster-manager/.idea/
+# multi-cluster-manager-frontend\README-front.MD
 
 permission-module
 roles
 *.js
-*.MD
-*.md
+MD/*
 
+multi-cluster-manager-frontend/*.txt
+multi-cluster-manager-frontend/*.ps1
+multi-cluster-manager/*.txt
+multi-cluster-manager/*.ps1
 multi-cluster-manager\.idea
+multi-cluster-manager/*.sh
+multi-cluster-manager/.idea/*
+
 multi-cluster-manager\script\*
 script
 multi-cluster-manager\*.MD
+multi-cluster-manager/target/
+multi-cluster-manager-frontend/.idea/
+sql/

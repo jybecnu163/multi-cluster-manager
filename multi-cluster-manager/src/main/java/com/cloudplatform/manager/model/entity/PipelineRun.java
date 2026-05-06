@@ -1,42 +1,26 @@
 package com.cloudplatform.manager.model.entity;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import lombok.Data;
 
 import java.time.Instant;
-import java.util.UUID;
 
-@Entity
-@Table(name = "pipeline_runs")
-@Getter
-@Setter
+@Data
+@TableName("pipeline_runs")
 public class PipelineRun {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(name = "pipeline_id")
-    private UUID pipelineId;
-
-    @Column(length = 20)
+    @TableId(type = IdType.AUTO)
+    private Long id;
+    private Long pipelineId;
     private String status;
-
-    @Column(name = "input_params", columnDefinition = "JSONB")
-    @JdbcTypeCode(SqlTypes.JSON)
     private String inputParams;
-
-    @Column(name = "approval_needed")
     private Boolean approvalNeeded;
-
-    @Column(name = "approved_by")
-    private UUID approvedBy;
-
-    @Column(name = "started_at")
+    // 审批人编号
+    private Long approvedBy;
     private Instant startedAt;
-
-    @Column(name = "finished_at")
     private Instant finishedAt;
+    private String executionLog;   // 可选，执行日志;
 }

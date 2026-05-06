@@ -1,20 +1,16 @@
 package com.cloudplatform.manager.model.entity;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
 
-@Entity
-@Table(name = "roles")
-@Getter
-@Setter
+@Data
+@TableName("roles")
 public class Role {
-    @Id
+
+    @TableId(type = IdType.AUTO)
     private Short id;
-
-    @Column(nullable = false, unique = true, length = 32)
     private String name;
-
-    @Column(name = "env_permission_mask")
     private Integer envPermissionMask;
 }

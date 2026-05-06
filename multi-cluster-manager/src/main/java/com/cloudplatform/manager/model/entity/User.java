@@ -1,43 +1,39 @@
 package com.cloudplatform.manager.model.entity;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
-@Entity
-@Table(name = "users")
-@Getter
-@Setter
+@Data
+@TableName("users")
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(nullable = false, length = 64)
+    @TableId(type = IdType.AUTO)
+    private Long id;
     private String name;
-
-    @Column(nullable = false, unique = true, length = 255)
     private String email;
-
-    @Column(name = "password_hash", nullable = false)
+    @TableField("password_hash")
     private String passwordHash;
-
-    @Column(name = "totp_secret")
+    @TableField("totp_secret")
     private String totpSecret;
-
-    @Column(name = "totp_enabled")
-    private Boolean totpEnabled = false;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @TableField("totp_enabled")
+    private Boolean totpEnabled;
+    @TableField("created_at")
     private Instant createdAt;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<UserDepartment> departments = new HashSet<>();
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", passwordHash='" + passwordHash + '\'' +
+                ", totpSecret='" + totpSecret + '\'' +
+                ", totpEnabled=" + totpEnabled +
+                ", createdAt=" + createdAt +
+                '}';
+    }
 }

@@ -1,35 +1,28 @@
 package com.cloudplatform.manager.model.entity;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
+import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
+import java.time.LocalDateTime;
 
-import java.time.Instant;
-import java.util.UUID;
-
-@Entity
-@Table(name = "approvals")
-@Getter
-@Setter
+@Data
+@TableName("approvals")
 public class Approval {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(name = "task_id")
-    private UUID taskId;
-
-    @Column(name = "approver_id")
-    private UUID approverId;
-
-    @Column(nullable = false, length = 20)
-    private String action;
-
-    @Column(columnDefinition = "TEXT")
+    @TableId(type = IdType.AUTO)
+    private Long id;
+    private Long taskId;
+    private Long approverId;
+    /**
+     * 审批单状态: pending, approved, rejected, expired
+     */
+    private String action;          // approve, reject, expired
     private String comment;
+    private LocalDateTime createdAt;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+
+    private String status;
+
+    /**
+     * 超时时间（绝对时间），用于定时任务判断
+     */
+    private LocalDateTime expiresAt;
 }

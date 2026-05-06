@@ -1,29 +1,20 @@
 package com.cloudplatform.manager.model.entity;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
 
-import java.util.UUID;
-
-@Entity
-@Table(name = "departments", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"company_id", "name"})
-})
-@Getter
-@Setter
+@Data
+@TableName("departments")
 public class Department {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
-
-    @Column(nullable = false, length = 128)
+    @TableId(type = IdType.AUTO)
+    private Long id;
+    @TableField("company_id")
+    private Long companyId;
     private String name;
+    @TableField("director_user_id")
+    private Long directorUserId;
 
-    @Column(name = "director_user_id")
-    private UUID directorUserId;
 }

@@ -1,5 +1,15 @@
 package com.cloudplatform.manager.service;
 
+import com.cloudplatform.manager.exception.BusinessException;
+import com.cloudplatform.manager.model.entity.Company;
+
+import java.util.List;
+
 public interface CompanyService {
-    // 占位接口，后续实现
+    List<Company> listCompanies();
+
+    Company createCompany(String name);
+
+    int deleteCompany(Long id) throws BusinessException;
+
 }

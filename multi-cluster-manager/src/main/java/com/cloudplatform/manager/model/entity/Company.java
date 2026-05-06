@@ -1,31 +1,19 @@
 package com.cloudplatform.manager.model.entity;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
+import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 import java.time.Instant;
 import java.util.UUID;
 
-@Entity
-@Table(name = "companies")
-@Getter
-@Setter
+@Data
+@TableName("companies")
 public class Company {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(nullable = false, unique = true, length = 128)
+    @TableId(type = IdType.AUTO)
+    private Long id;
     private String name;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @TableField(value = "created_at", insertStrategy = FieldStrategy.NEVER)
     private Instant createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
+    @TableField(value = "updated_at", update = "now()")
     private Instant updatedAt;
+
 }
