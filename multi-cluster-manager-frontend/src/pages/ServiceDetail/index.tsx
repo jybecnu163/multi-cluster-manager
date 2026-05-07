@@ -17,17 +17,38 @@ import {
     Table,
     Tag,
     Tooltip,
-    Typography
+    Typography,
 } from 'antd';
 import {ArrowLeftOutlined, DownloadOutlined} from '@ant-design/icons';
-// ✅ 全量引入，避免按需引入造成的 init 未定义问题
 import ReactECharts from 'echarts-for-react';
-import {exportServiceReport, getServiceDetail, getServiceMetrics, manualScale} from '../../api/services';
+import {exportServiceReport, getServiceDetail, getServiceMetrics, manualScale,} from '../../api/services';
 import {getDepartmentSettings} from '../../api/departments';
 import {MetricTimeSeries, PodInfo, ServiceDetail as ServiceDetailType} from '../../api/types';
 import {useAuthStore} from '../../store/useAuthStore';
 
 const {Title: TypTitle, Text} = Typography;
+
+// ---------- 自定义双控件：滑块 + 数字输入，受控于 Form.Item ----------
+const ReplicasInput: React.FC<{
+    value?: number;
+    onChange?: (value: number) => void;
+    max: number;
+}> = ({value = 0, onChange, max}) => (
+    <Row gutter={16} align="middle">
+        <Col xs={24} sm={18}>
+            <Slider min={0} max={max} step={1} value={value} onChange={onChange}/>
+        </Col>
+        <Col xs={24} sm={6}>
+            <InputNumber
+                min={0}
+                max={max}
+                style={{width: '100%'}}
+                value={value}
+                onChange={onChange}
+            />
+        </Col>
+    </Row>
+);
 
 export default function ServiceDetailPage() {
     const {id} = useParams<{ id: string }>();
@@ -91,7 +112,7 @@ export default function ServiceDetailPage() {
     const handleManualScale = async (values: {
         target_replicas: number;
         reason: string;
-        ignore_approval?: boolean
+        ignore_approval?: boolean;
     }) => {
         setScaleSubmitting(true);
         try {
@@ -138,6 +159,7 @@ export default function ServiceDetailPage() {
                 </Button>
             </Space>
 
+            {/* 基本信息 */}
             <Card title={<TypTitle level={3}>{detail.name}</TypTitle>}>
                 <Descriptions column={2} bordered size="small">
                     <Descriptions.Item label="工作负载类型">{detail.workload_type}</Descriptions.Item>
@@ -155,6 +177,7 @@ export default function ServiceDetailPage() {
                 </div>
             </Card>
 
+            {/* Pod 列表 */}
             <Card title="Pod 实例" style={{marginTop: 16}}>
                 <Table
                     dataSource={detail.pods}
@@ -186,6 +209,7 @@ export default function ServiceDetailPage() {
                 />
             </Card>
 
+            {/* 资源使用趋势图 */}
             <Row gutter={16} style={{marginTop: 16}}>
                 <Col xs={24} lg={12}>
                     <Card>
@@ -199,6 +223,7 @@ export default function ServiceDetailPage() {
                 </Col>
             </Row>
 
+            {/* 手动扩缩容 */}
             <Card title="手动扩缩容" style={{marginTop: 16}}>
                 <Form
                     form={scaleForm}
@@ -211,15 +236,9 @@ export default function ServiceDetailPage() {
                         name="target_replicas"
                         rules={[{required: true, type: 'number', min: 0, message: '请输入副本数'}]}
                     >
-                        <Row gutter={16} align="middle">
-                            <Col xs={24} sm={18}>
-                                <Slider min={0} max={Math.max(detail.replicas * 2, 10)} step={1}/>
-                            </Col>
-                            <Col xs={24} sm={6}>
-                                <InputNumber min={0} style={{width: '100%'}}/>
-                            </Col>
-                        </Row>
+                        <ReplicasInput max={Math.max(detail.replicas * 2, 10)}/>
                     </Form.Item>
+
                     <Form.Item
                         label="操作原因"
                         name="reason"
@@ -228,18 +247,21 @@ export default function ServiceDetailPage() {
                     >
                         <Input.TextArea rows={2} maxLength={500}/>
                     </Form.Item>
+
                     <Form.Item label="跳过审批" name="ignore_approval" valuePropName="checked">
                         <Tooltip
                             title={!canIgnoreApproval ? '仅当部门设置允许运维免批且您具备运维工程师角色时可用' : '勾选后将跳过生产审批'}>
                             <Switch disabled={!canIgnoreApproval}/>
                         </Tooltip>
                     </Form.Item>
+
                     <Form.Item>
                         <Button type="primary" htmlType="submit" loading={scaleSubmitting}>
                             提交扩缩容
                         </Button>
                     </Form.Item>
                 </Form>
+
                 {scaleResult && (
                     <Alert
                         type={scaleResult.requires_approval ? 'warning' : 'success'}
