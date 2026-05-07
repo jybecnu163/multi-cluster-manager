@@ -1,23 +1,31 @@
-import {useState, useEffect} from 'react';
-import {useParams, useNavigate} from 'react-router-dom';
+import {useEffect, useState} from 'react';
+import {useNavigate, useParams} from 'react-router-dom';
 import {
-    Card, Button, Space, Descriptions, Tag, Table, Typography, message, Row, Col,
-    Slider, InputNumber, Form, Input, Switch, Alert, Tooltip
+    Alert,
+    Button,
+    Card,
+    Col,
+    Descriptions,
+    Form,
+    Input,
+    InputNumber,
+    message,
+    Row,
+    Slider,
+    Space,
+    Switch,
+    Table,
+    Tag,
+    Tooltip,
+    Typography
 } from 'antd';
 import {ArrowLeftOutlined, DownloadOutlined} from '@ant-design/icons';
-import ReactEChartsCore from 'echarts-for-react/lib/core';
-import * as echarts from 'echarts/core';
-import {LineChart} from 'echarts/charts';
-import {GridComponent, TooltipComponent, TitleComponent} from 'echarts/components';
-import {CanvasRenderer} from 'echarts/renderers';
-import {
-    getServiceDetail, getServiceMetrics, exportServiceReport, manualScale
-} from '../../api/services';
+// ✅ 全量引入，避免按需引入造成的 init 未定义问题
+import ReactECharts from 'echarts-for-react';
+import {exportServiceReport, getServiceDetail, getServiceMetrics, manualScale} from '../../api/services';
 import {getDepartmentSettings} from '../../api/departments';
-import {ServiceDetail as ServiceDetailType, PodInfo, MetricTimeSeries} from '../../api/types';
+import {MetricTimeSeries, PodInfo, ServiceDetail as ServiceDetailType} from '../../api/types';
 import {useAuthStore} from '../../store/useAuthStore';
-
-echarts.use([LineChart, GridComponent, TooltipComponent, TitleComponent, CanvasRenderer]);
 
 const {Title: TypTitle, Text} = Typography;
 
@@ -25,14 +33,15 @@ export default function ServiceDetailPage() {
     const {id} = useParams<{ id: string }>();
     const serviceId = Number(id);
     const navigate = useNavigate();
+    const {user} = useAuthStore();
+
     const [detail, setDetail] = useState<ServiceDetailType | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [cpuMetrics, setCpuMetrics] = useState<MetricTimeSeries | null>(null);
     const [memMetrics, setMemMetrics] = useState<MetricTimeSeries | null>(null);
-    const {user} = useAuthStore();
 
-    // 扩缩容相关状态
+    // 扩缩容相关
     const [deptSettings, setDeptSettings] = useState<{ allow_ops_bypass_prod_scale: boolean } | null>(null);
     const [scaleResult, setScaleResult] = useState<{ task_id: number; requires_approval: boolean } | null>(null);
     const [scaleSubmitting, setScaleSubmitting] = useState(false);
@@ -41,7 +50,6 @@ export default function ServiceDetailPage() {
     const isOps = user?.roles?.includes('运维工程师');
     const canIgnoreApproval = deptSettings?.allow_ops_bypass_prod_scale && isOps;
 
-// 加载详情、指标和部门设置
     useEffect(() => {
         if (!serviceId) return;
         setLoading(true);
@@ -65,7 +73,6 @@ export default function ServiceDetailPage() {
             .finally(() => setLoading(false));
     }, [serviceId]);
 
-    // 报表导出
     const handleExport = async () => {
         try {
             const blob = await exportServiceReport(serviceId, 'day');
@@ -81,7 +88,6 @@ export default function ServiceDetailPage() {
         }
     };
 
-// 手动扩缩容提交
     const handleManualScale = async (values: {
         target_replicas: number;
         reason: string;
@@ -103,37 +109,15 @@ export default function ServiceDetailPage() {
         }
     };
 
-    const fetchDetail = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const [detailData, cpuData, memData] = await Promise.all([
-                getServiceDetail(serviceId),
-                getServiceMetrics(serviceId, 'cpu', '1h'),
-                getServiceMetrics(serviceId, 'memory', '1h'),
-            ]);
-            setDetail(detailData);
-            setCpuMetrics(cpuData);
-            setMemMetrics(memData);
-        } catch (err: any) {
-            setError('无法加载服务详情');
-            message.error('加载失败');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchDetail();
-    }, [serviceId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-
     const buildChartOption = (title: string, data: MetricTimeSeries | null) => {
         if (!data) return {};
         return {
-            title: {text: title},
+            title: {text: title, left: 'center'},
             tooltip: {trigger: 'axis'},
-            xAxis: {type: 'category', data: data.timestamps.map((t) => new Date(t).toLocaleTimeString())},
+            xAxis: {
+                type: 'category',
+                data: data.timestamps.map((t) => new Date(t).toLocaleTimeString()),
+            },
             yAxis: {type: 'value'},
             series: [{data: data.values, type: 'line', smooth: true}],
         };
@@ -142,7 +126,6 @@ export default function ServiceDetailPage() {
     if (loading) return <Card loading={true}/>;
     if (error) return <Card>{error}</Card>;
     if (!detail) return <Card>服务不存在</Card>;
-
 
     return (
         <>
@@ -155,7 +138,6 @@ export default function ServiceDetailPage() {
                 </Button>
             </Space>
 
-            {/* 基本信息 */}
             <Card title={<TypTitle level={3}>{detail.name}</TypTitle>}>
                 <Descriptions column={2} bordered size="small">
                     <Descriptions.Item label="工作负载类型">{detail.workload_type}</Descriptions.Item>
@@ -173,7 +155,6 @@ export default function ServiceDetailPage() {
                 </div>
             </Card>
 
-            {/* Pod 实例列表 */}
             <Card title="Pod 实例" style={{marginTop: 16}}>
                 <Table
                     dataSource={detail.pods}
@@ -205,21 +186,19 @@ export default function ServiceDetailPage() {
                 />
             </Card>
 
-            {/* 资源使用趋势图 */}
             <Row gutter={16} style={{marginTop: 16}}>
                 <Col xs={24} lg={12}>
                     <Card>
-                        <ReactEChartsCore option={buildChartOption('CPU 使用率', cpuMetrics)} style={{height: 300}}/>
+                        <ReactECharts option={buildChartOption('CPU 使用率', cpuMetrics)} style={{height: 300}}/>
                     </Card>
                 </Col>
                 <Col xs={24} lg={12}>
                     <Card>
-                        <ReactEChartsCore option={buildChartOption('内存使用率', memMetrics)} style={{height: 300}}/>
+                        <ReactECharts option={buildChartOption('内存使用率', memMetrics)} style={{height: 300}}/>
                     </Card>
                 </Col>
             </Row>
 
-            {/* 手动扩缩容面板 */}
             <Card title="手动扩缩容" style={{marginTop: 16}}>
                 <Form
                     form={scaleForm}
@@ -241,7 +220,6 @@ export default function ServiceDetailPage() {
                             </Col>
                         </Row>
                     </Form.Item>
-
                     <Form.Item
                         label="操作原因"
                         name="reason"
@@ -250,26 +228,18 @@ export default function ServiceDetailPage() {
                     >
                         <Input.TextArea rows={2} maxLength={500}/>
                     </Form.Item>
-
                     <Form.Item label="跳过审批" name="ignore_approval" valuePropName="checked">
                         <Tooltip
-                            title={
-                                !canIgnoreApproval
-                                    ? '仅当部门设置允许运维免批且您具备运维工程师角色时可用'
-                                    : '勾选后将跳过生产审批（需部门主管已开启免批）'
-                            }
-                        >
+                            title={!canIgnoreApproval ? '仅当部门设置允许运维免批且您具备运维工程师角色时可用' : '勾选后将跳过生产审批'}>
                             <Switch disabled={!canIgnoreApproval}/>
                         </Tooltip>
                     </Form.Item>
-
                     <Form.Item>
                         <Button type="primary" htmlType="submit" loading={scaleSubmitting}>
                             提交扩缩容
                         </Button>
                     </Form.Item>
                 </Form>
-
                 {scaleResult && (
                     <Alert
                         type={scaleResult.requires_approval ? 'warning' : 'success'}

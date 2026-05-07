@@ -1,7 +1,11 @@
 package com.cloudplatform.manager.integration;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.cloudplatform.manager.exception.BusinessException;
 import com.cloudplatform.manager.mapper.ClusterMapper;
+import com.cloudplatform.manager.mapper.DeploymentTaskMapper;
 import com.cloudplatform.manager.model.entity.Cluster;
+import com.cloudplatform.manager.model.entity.DeploymentTask;
 import com.cloudplatform.manager.util.EncryptionUtil;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -9,18 +13,17 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -32,7 +35,8 @@ public class K8sClientManager {
 
     private final ClusterMapper clusterMapper;
     private final EncryptionUtil encryptionUtil;
-
+    @Autowired
+    private DeploymentTaskMapper deploymentTaskMapper;
     // 存储活跃的 KubernetesClient，key = clusterId
     private final Map<Long, KubernetesClient> clientMap = new ConcurrentHashMap<>();
     // 存储集群的离线计数（连续失败次数）
@@ -96,6 +100,7 @@ public class K8sClientManager {
 
     /**
      * 获取指定集群的 KubernetesClient
+     *
      * @throws RuntimeException 如果客户端不存在或集群离线
      */
     public KubernetesClient getClient(Long clusterId) {
@@ -240,23 +245,56 @@ public class K8sClientManager {
         return 0;
     }
 
-    public void scaleWorkload(Long clusterId, String namespace, String workloadName, String workloadType, int targetReplicas) {
+    /**
+     * 扩缩容工作负载（支持自动识别金丝雀版本）
+     *
+     * @param serviceInstanceId 服务实例ID，如果不为null，则会检查是否存在活跃的灰度任务，若存在则自动切换到金丝雀 Deployment
+     */
+    public void scaleWorkload(Long clusterId, String namespace, String workloadName,
+                              String workloadType, int targetReplicas, Long serviceInstanceId) {
+        String actualWorkloadName = workloadName;
         try {
+            if (serviceInstanceId != null) {
+                // 查询是否有进行中的 canary 任务（internal_test, traffic_5, traffic_25, paused）
+                LambdaQueryWrapper<DeploymentTask> wrapper = new LambdaQueryWrapper<>();
+                wrapper.eq(DeploymentTask::getServiceInstanceId, serviceInstanceId)
+                        .eq(DeploymentTask::getTaskType, "canary")
+                        .in(DeploymentTask::getStatus, Arrays.asList(
+                                "internal_test", "traffic_5", "traffic_25", "paused"));
+                DeploymentTask activeCanary = deploymentTaskMapper.selectOne(wrapper);
+                if (activeCanary != null) {
+                    actualWorkloadName = workloadName + "-canary";
+                    log.info("Active canary task exists, scaling canary deployment: {}", actualWorkloadName);
+                }
+            }
+
             KubernetesClient client = getClient(clusterId);
             if ("Deployment".equalsIgnoreCase(workloadType)) {
-                client.apps().deployments().inNamespace(namespace).withName(workloadName)
+                client.apps().deployments().inNamespace(namespace).withName(actualWorkloadName)
                         .scale(targetReplicas);
             } else if ("StatefulSet".equalsIgnoreCase(workloadType)) {
-                client.apps().statefulSets().inNamespace(namespace).withName(workloadName)
+                client.apps().statefulSets().inNamespace(namespace).withName(actualWorkloadName)
                         .scale(targetReplicas);
             } else {
                 throw new IllegalArgumentException("Unsupported workload type: " + workloadType);
             }
-            log.info("Scaled {} {} to {} replicas", workloadType, workloadName, targetReplicas);
+            log.info("Scaled {} {} to {} replicas", workloadType, actualWorkloadName, targetReplicas);
+        } catch (KubernetesClientException e) {
+            if (e.getCode() == 404) {
+                log.error("Workload {} not found in namespace {}", actualWorkloadName, namespace);
+                throw new BusinessException("目标工作负载不存在，请先进行发布", 404);
+            }
+            throw e;
         } catch (Exception e) {
             log.error("Failed to scale workload", e);
             throw new RuntimeException("Scale operation failed", e);
         }
+    }
+
+    // 保留原方法（兼容性），内部调用新方法，serviceInstanceId传null
+    public void scaleWorkload(Long clusterId, String namespace, String workloadName,
+                              String workloadType, int targetReplicas) {
+        scaleWorkload(clusterId, namespace, workloadName, workloadType, targetReplicas, null);
     }
 
     public double getPodMetricAvg(Long clusterId, String namespace, String workloadName, String metric) {

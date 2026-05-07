@@ -39,7 +39,7 @@ public class ServiceController extends BaseController {
     }
 
     @GetMapping("/{service_id}")
-    @PreAuthorize("hasPermission(#serviceId, 'SERVICE_VIEW')")
+    @PreAuthorize("hasRole('系统管理员') or hasPermission(#serviceId, 'SERVICE_VIEW')")
     @Operation(summary = "服务详情")
     public ResponseEntity<ServiceDetailResponse> getService(@PathVariable("service_id") Long serviceId) {
         ServiceDetailResponse detail = serviceInstanceService.getServiceDetail(serviceId);
@@ -47,7 +47,7 @@ public class ServiceController extends BaseController {
     }
 
     @GetMapping("/{service_id}/metrics")
-    @PreAuthorize("hasPermission(#serviceId, 'SERVICE_VIEW')")
+    @PreAuthorize("hasRole('系统管理员') or hasPermission(#serviceId, 'SERVICE_VIEW')")
     @Operation(summary = "获取资源使用趋势")
     public ResponseEntity<MetricTimeSeries> getMetrics(
             @PathVariable("service_id") Long serviceId,
@@ -58,7 +58,7 @@ public class ServiceController extends BaseController {
     }
 
     @GetMapping("/{service_id}/reports/export")
-    @PreAuthorize("hasPermission(#serviceId, 'HISTORY_VIEW')")
+    @PreAuthorize("hasRole('系统管理员') or hasPermission(#serviceId, 'HISTORY_VIEW')")
     @Operation(summary = "导出历史报表CSV")
     public void exportReport(
             @PathVariable("service_id") Long serviceId,

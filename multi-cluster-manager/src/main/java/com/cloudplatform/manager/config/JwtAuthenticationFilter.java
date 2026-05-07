@@ -56,7 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 CurrentUserDetails userDetails = new CurrentUserDetails(userId, email);
 // 从数据库查询用户角色
                 List<GrantedAuthority> authorities = loadUserAuthorities(userId);
-                System.err.println("userId:" + userId + " authorities:" + authorities);
+
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                         userDetails, null, authorities);  // 注意第三个参数为 authorities
                 SecurityContextHolder.getContext().setAuthentication(auth);

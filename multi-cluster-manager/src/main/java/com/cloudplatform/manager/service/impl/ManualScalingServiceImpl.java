@@ -4,11 +4,10 @@ import com.cloudplatform.manager.dto.ManualScaleRequest;
 import com.cloudplatform.manager.dto.ScaleResponse;
 import com.cloudplatform.manager.integration.K8sClientManager;
 import com.cloudplatform.manager.mapper.AutoScalingPolicyMapper;
-import com.cloudplatform.manager.mapper.ServiceInstanceMapper;
 import com.cloudplatform.manager.mapper.DeploymentTaskMapper;
-import com.cloudplatform.manager.model.entity.AutoScalingPolicy;
-import com.cloudplatform.manager.model.entity.ServiceInstance;
+import com.cloudplatform.manager.mapper.ServiceInstanceMapper;
 import com.cloudplatform.manager.model.entity.DeploymentTask;
+import com.cloudplatform.manager.model.entity.ServiceInstance;
 import com.cloudplatform.manager.service.ApprovalService;
 import com.cloudplatform.manager.service.ManualScalingService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -74,7 +72,7 @@ public class ManualScalingServiceImpl implements ManualScalingService {
 
     private void executeScale(ServiceInstance inst, int targetReplicas, Long userId) {
         k8sClientManager.scaleWorkload(inst.getClusterId(), inst.getNamespace(),
-                inst.getWorkloadName(), inst.getWorkloadType(), targetReplicas);
+                inst.getWorkloadName(), inst.getWorkloadType(), targetReplicas, inst.getId());
         // 更新本地副本数记录
         inst.setReplicas(targetReplicas);
         serviceInstanceMapper.updateById(inst);

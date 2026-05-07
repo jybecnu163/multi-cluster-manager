@@ -20,7 +20,7 @@ public class ScalingController extends BaseController{
     private final ManualScalingService manualScalingService;
 
     @PostMapping("/{service_id}/scale")
-    @PreAuthorize("hasPermission(#serviceId, 'SCALE')")
+    @PreAuthorize("hasRole('系统管理员') or hasPermission(#serviceId, 'SCALE')")
     @Operation(summary = "手动扩缩容")
     public ResponseEntity<ScaleResponse> manualScale(
             @PathVariable("service_id") Long serviceId,

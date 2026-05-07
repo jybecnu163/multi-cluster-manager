@@ -146,7 +146,7 @@ public class AutoScalingServiceImpl implements AutoScalingService {
 
     private void executeScale(ServiceInstance inst, int targetReplicas, String reason) {
         k8sClientManager.scaleWorkload(inst.getClusterId(), inst.getNamespace(),
-                inst.getWorkloadName(), inst.getWorkloadType(), targetReplicas);
+                inst.getWorkloadName(), inst.getWorkloadType(), targetReplicas, inst.getId());
         inst.setReplicas(targetReplicas);
         serviceInstanceMapper.updateById(inst);
         log.info("Auto-scaling executed for service {} to {} replicas, reason: {}", inst.getId(), targetReplicas, reason);
